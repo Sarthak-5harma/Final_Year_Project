@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- layout / colours ---------- */
+/* ---------- layout / colours ---------- */
+body {
+  /* base hue → subtle pastel gradient */
+  @apply bg-brand-50 text-slate-900 antialiased min-h-screen;
+
+  /* radial rings overlay */
+  background-image:
+    url('/bg-radials.svg'),
+    radial-gradient(1200px at 50% -20%, rgb(37 99 235 / .07), transparent);
+  background-repeat: no-repeat;
+  background-size: cover, 100% 100%;
+  background-position: center top, center;
+}
+
+/* ---------- tiny helpers ---------- */
+@layer utilities {
+  /* muted glass‑panel look for cards */
+  .shadow-card    { @apply shadow-lg shadow-slate-900/5 bg-white/70 backdrop-blur; }
+  /* just sugar for <div class="animate-fade">…</div>          */
+  .animate-fade   { @apply animate-fade; }
+  /* generic controls */
+  .input          { @apply w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500; }
+  .btn-primary    { @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md px-4 py-2 disabled:opacity-50; }
+  .btn-danger     { @apply bg-red-600    hover:bg-red-700    text-white font-medium rounded-md px-4 py-2 disabled:opacity-50; }
+  .icon-btn       { @apply p-2 rounded-md hover:bg-gray-100 transition; }
+  .link           { @apply text-indigo-600 hover:underline; }
+}
