@@ -1,42 +1,96 @@
-<html>
-<head>
-  <title>Student Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .cert { margin: 10px 0; border: 1px solid #ccc; padding: 10px; }
-  </style>
-</head>
-<body>
-  <h2>Your Academic Credentials</h2>
-  <button onclick="loadCredentials()">Load My Credentials</button>
-  <div id="certificates"></div>
+// frontend/src/pages/ViewStudentCredentialPage.tsx
+import React, { useState } from 'react';
+import { useEthereum } from '../contexts/EthereumContext';
+import { BigNumber } from 'ethers';
 
-  <script>
-    const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE";
-    const contractABI = [/* Paste ABI here */];
+interface Credential {
+  tokenId: string;
+  uri: string;
+}
 
-    async function loadCredentials() {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
-      const contract = new ethers.Contract(contractAddress, contractABI, signer);
+const ViewStudentCredentialPage: React.FC = () => {
+  const { contract } = useEthereum();
 
-      const balance = await contract.balanceOf(address);
-      let certHTML = "";
+  const [address, setAddress]       = useState<string>('');
+  const [creds, setCreds]           = useState<Credential[] | null>(null);
+  const [loading, setLoading]       = useState<boolean>(false);
+  const [error,   setError]         = useState<string>('');
 
-      for (let i = 0; i < balance; i++) {
-        const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-        const tokenURI = await contract.tokenURI(tokenId);
-        certHTML += `<div class="cert">
-          <p><b>Token ID:</b> ${tokenId}</p>
-          <p><a href="https://ipfs.io/ipfs/${tokenURI}" target="_blank">View Certificate</a></p>
-        </div>`;
+  const ipfsToGateway = (uri: string) =>
+    uri.startsWith('ipfs://') ? `https://ipfs.io/ipfs/${uri.slice(7)}` : uri;
+
+  const fetchCredentials = async () => {
+    if (!contract) { setError('Connect wallet first'); return; }
+    if (!address)   { setError('Enter an address');   return; }
+
+    setLoading(true); setError(''); setCreds(null);
+
+    try {
+      const bal: BigNumber = await contract.balanceOf(address);
+      const total = bal.toNumber();
+      const list: Credential[] = [];
+
+      for (let i = 0; i < total; i++) {
+        const tokenIdBN: BigNumber = await contract.tokenOfOwnerByIndex(address, i);
+        const tokenId = tokenIdBN.toString();
+        try {
+          const uri: string = await contract.tokenURI(tokenId);
+          list.push({ tokenId, uri });
+        } catch {
+          list.push({ tokenId, uri: '(revoked or inaccessible)' });
+        }
       }
-
-      document.getElementById("certificates").innerHTML = certHTML || "No credentials found.";
+      setCreds(list);
+    } catch (e: any) {
+      console.error(e);
+      setError('Failed to fetch credentials (see console)');
+    } finally {
+      setLoading(false);
     }
-  </script>
-</body>
-</html>
+  };
+
+  /* ---------- UI ---------- */
+  return (
+    <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <h2>View Student Credentials</h2>
+      <p>Enter a wallet address to list all credential NFTs held by that address.</p>
+
+      <input
+        style={{ width: '100%', padding: 6 }}
+        placeholder="0x1234…"
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+      />
+      <button onClick={fetchCredentials} disabled={loading} style={{ marginTop: 10 }}>
+        {loading ? 'Loading…' : 'Fetch'}
+      </button>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {creds && (
+        <div style={{ marginTop: 20 }}>
+          {creds.length === 0 ? (
+            <p>No credentials found.</p>
+          ) : (
+            <ul>
+              {creds.map((c) => (
+                <li key={c.tokenId} style={{ marginBottom: 6 }}>
+                  Token&nbsp;{c.tokenId}:{' '}
+                  {c.uri.startsWith('http') || c.uri.startsWith('ipfs://') ? (
+                    <a href={ipfsToGateway(c.uri)} target="_blank" rel="noreferrer">
+                      View
+                    </a>
+                  ) : (
+                    <span>{c.uri}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ViewStudentCredentialPage;

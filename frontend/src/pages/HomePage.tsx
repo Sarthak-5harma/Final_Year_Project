@@ -1,23 +1,20 @@
-<html>
-<head>
-  <title>Academic Credential Ecosystem</title>
-  <style>
-    body { font-family: Arial; padding: 40px; text-align: center; }
-    h1 { color: #e60000; }
-    .nav { margin-top: 30px; }
-    .nav a { display: block; margin: 10px; text-decoration: none; color: #0077cc; font-size: 18px; }
-  </style>
-</head>
-<body>
-  <h1>Welcome to Blockchain Credential Ecosystem</h1>
-  <p>Reinventing Trust in Academic Certifications</p>
-  <div class="nav">
-    <a href="issuer.html">University Portal</a>
-    <a href="student.html">Student Dashboard</a>
-    <a href="verifier.html">Verifier Portal</a>
-    <a href="revoke.html">Revoke Credential</a>
-    <a href="universities.html">Registered Universities</a>
-    <a href="allcredentials.html">All Issued Credentials</a>
+import React from "react";
+import { Link } from "react-router-dom";
+
+const HomePage: React.FC = () => (
+  <div className="flex flex-col items-center justify-center h-[70vh] text-center fade-in">
+    <h1 className="text-4xl md:text-5xl font-bold mb-2">
+      Welcome to <span className="text-primary">CredChain</span>
+    </h1>
+    <p className="text-slate-600 mb-8">
+      Blockchain‑backed academic credentials you can verify anywhere.
+    </p>
+
+    <div className="flex gap-4">
+      <Link to="/view" className="btn-primary">View My Credentials</Link>
+      <Link to="/verify" className="btn-outline">Verify a Credential</Link>
+    </div>
   </div>
-</body>
-</html>
+);
+
+export default HomePage;
