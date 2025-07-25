@@ -40,6 +40,53 @@ contract AcademicCredential is
     }
 
     /**
+     * @dev Override required by Solidity for multiple inheritance.
+     * Ensures enumeration and AccessControl interfaces are supported.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        override(ERC721Enumerable, ERC721URIStorage, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev Override required by ERC721Enumerable for tracking token indices.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    /**
+     * @dev Override required to use ERC721URIStorage (clears token URI on burn).
+     * Also cleans up our credentialIssuer mapping on burn.
+     */
+    function _burn(
+        uint256 tokenId
+    ) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+        delete credentialIssuer[tokenId];
+    }
+
+    /**
+     * @dev Override to use token URI from ERC721URIStorage.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    /**
      * @notice Admin-only function to register a new University.
      * Grants the ISSUER_ROLE to `uniAddress` and stores its name.
      */
